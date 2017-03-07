@@ -1,0 +1,14 @@
+.metadata
+.recommenders
+.DS_Store
+.classpath
+.settings
+bin
+target
+workspace
+*.log
+*.class
+*.jnilib
+*.jar
+Debug
+include
