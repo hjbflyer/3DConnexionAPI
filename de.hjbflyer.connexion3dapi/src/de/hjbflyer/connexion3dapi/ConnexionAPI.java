@@ -80,6 +80,8 @@ public class ConnexionAPI {
         try {
             setConnexionHandlers();
             registerConnexion(execName);
+            setConnexionClientMask(MASK_ALL);
+            
         } catch (ConnexionAPIException e) {
             e.printStackTrace();
         }

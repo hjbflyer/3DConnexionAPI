@@ -117,7 +117,7 @@ public class ConnexionAPIDemo extends Application
      */
     @Override
     public void buttonChanged(long button) {
-        System.out.println("3DConnexion buttons changed: " + button); //$NON-NLS-1$
+        System.out.println("3DConnexion buttons changed: " + Long.toHexString(button)); //$NON-NLS-1$
     }
 
     /** 
