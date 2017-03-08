@@ -396,6 +396,7 @@ void fillPrefs(jclass prefsClass, jobject prefsObj, JNIEnv* env, ConnexionDevice
 		data[i] = pprefs->mapV[i];
 	}
 	env->SetIntArrayRegion(intarray, 0, NO_OF_AXIS, data);
+	env->CallVoidMethod(prefsObj, mid, intarray);
 
 	intarray = env->NewIntArray(NO_OF_AXIS);
 	mid = env->GetMethodID(prefsClass, "setMapH", "([I)V");
@@ -403,6 +404,8 @@ void fillPrefs(jclass prefsClass, jobject prefsObj, JNIEnv* env, ConnexionDevice
 		data[i] = pprefs->mapH[i];
 	}
 	env->SetIntArrayRegion(intarray, 0, NO_OF_AXIS, data);
+	env->CallVoidMethod(prefsObj, mid, intarray);
+
 
 	intarray = env->NewIntArray(NO_OF_AXIS);
 	mid = env->GetMethodID(prefsClass, "setEnabled", "([I)V");
@@ -410,34 +413,39 @@ void fillPrefs(jclass prefsClass, jobject prefsObj, JNIEnv* env, ConnexionDevice
 		data[i] = pprefs->enabled[i];
 	}
 	env->SetIntArrayRegion(intarray, 0, NO_OF_AXIS, data);
+	env->CallVoidMethod(prefsObj, mid, intarray);
 
 	intarray = env->NewIntArray(NO_OF_AXIS);
-
 	mid = env->GetMethodID(prefsClass, "setReversed", "([I)V");
 	for (int i = 0; i < NO_OF_AXIS; i++) {
 		data[i] = pprefs->reversed[i];
 	}
 	env->SetIntArrayRegion(intarray, 0, NO_OF_AXIS, data);
+	env->CallVoidMethod(prefsObj, mid, intarray);
 
 	mid = env->GetMethodID(prefsClass, "setSpeed", "([I)V");
 	for (int i = 0; i < NO_OF_AXIS; i++) {
 		data[i] = pprefs->speed[i];
 	}
 	env->SetIntArrayRegion(intarray, 0, NO_OF_AXIS, data);
+	env->CallVoidMethod(prefsObj, mid, intarray);
 
 	mid = env->GetMethodID(prefsClass, "setSensitivity", "([I)V");
 	for (int i = 0; i < NO_OF_AXIS; i++) {
 		data[i] = pprefs->sensitivity[i];
 	}
 	env->SetIntArrayRegion(intarray, 0, NO_OF_AXIS, data);
+	env->CallVoidMethod(prefsObj, mid, intarray);
 
 	jlongArray longarray = env->NewLongArray(NO_OF_AXIS);
+	jlong lData[NO_OF_AXIS];
 	mid = env->GetMethodID(prefsClass, "setScale", "([J)V");
-	long longData[NO_OF_AXIS];
 	for (int i = 0; i < NO_OF_AXIS; i++) {
-		longData[i] = pprefs->scale[i];
+		lData[i] = pprefs->scale[i];
 	}
-	env->SetLongArrayRegion(longarray, 0, NO_OF_AXIS, longData);
+	env->SetLongArrayRegion(longarray, 0, NO_OF_AXIS, lData);
+	env->CallVoidMethod(prefsObj, mid, longarray);
+
 }
 
 /*

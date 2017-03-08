@@ -61,6 +61,7 @@ public class ConnexionAPIDemo extends Application
             @Override
             public void handle(ActionEvent event) {
                 api.connexionGetCurrentDevicePrefs(prefs);
+                System.out.println("Prefs: " + prefs.toString());
                 Integer i = new Integer(0);
                 int err = api.connexionClientControl(ConnexionAPI.CTRL_GET_CLIENT_ID, 0, i);
                 System.out.println("control returned with error: " + err + " and clientID " + i);  //$NON-NLS-1$//$NON-NLS-2$
