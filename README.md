@@ -6,14 +6,36 @@ Java API implementation for the Connexion 3D mouse.
 * [Eclipse](http://www.eclipse.org) (As development environment) 
 * [XCode](https://developer.apple.com/xcode/) (For the C/C++ tools on a MAC)
 
-## Building
-
-Building the dynamic library <em>libConnexionAPI</em> and the jar can be done either from command line or from Eclipse. To build from command line and run a small demo, open a terminal. 
+## Installing and Building
+Clone the repository with:
 ```
-cd <ProjectDirectory>/jni
-make all
+git clone https://github.com/hjbflyer/3DConnexionAPI 3DConnexionAPI
+cd 3DConnexionAPI/jni
+make
+```
+Building the dynamic library <em>libConnexionAPI</em> and the jar can be done either from command line or from Eclipse. To build from command line and run a small demo, open a terminal.
+
+Start <em>Eclipse</em> and make "3DConnexionAPI" your working directory. Next open the workbench. 
+Create a new Java project with the name "de.hjbflyer.connexion3dapi" and click "Next" and "Finish".
+
+You will see a problems dialog. This is because of the not configured checkstyle configuration. To solve this, open <em>Eclipse->Preferences...->Checkstyle". Add a new "Project Relative Configuration" with name  "hjbflyer style" and browse to hjbflyerstyle51.xml in the config
+sub-directory. Click "Protect Checkstyle Configuration file" and then "OK". Make the new style the default. Rebuild the project.
+There should be no errors and no warnings.
+
+In the same config directory is a file called "javafx.target". Open this file within Eclipse and click "Set as Target Platform". Computing the target platform takes a while
+
+Next select the "Properties" from the project context menu. Navigate to "Java Build Path->Libraries". Unfold the
+JRE System Library and select the "Native library location" for editing. Select the jni sub-directory in work workspace.
+Now you can run the demo from Eclipse.
+
+
+## Runnning the Demo
+
+Building the dynamic library <em>libConnexionAPI</em> and the jar can be done either from command line or from Eclipse. To run a small demo, open a terminal. 
+```
 java -jar ConnexioAPI.jar 
 ```
+
 ### Tips
 We need the Connexion header files. So the driver has to be installed. On a MAC it is located in <em>/Library/Frameworks/3DConnexionClient.framework</em>. To help the compiler finding the header files, we have created a symbolic link.
 
@@ -24,6 +46,7 @@ The header file <em>de_hjbflyer_connexion3dapi_ConnexionApi.h</em> is automatica
 ```
 make all
 ```
+
 
 ## JavaDoc
 To generate the JavaDoc
