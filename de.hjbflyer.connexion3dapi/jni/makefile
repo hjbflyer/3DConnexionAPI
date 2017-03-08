@@ -10,23 +10,23 @@
 JNI_NAME = ConnexionAPI
 PACKAGE := de.hjbflyer.connexion3dapi
 # #############################################################################################
-LDFLAGS = -framework 3DconnexionClient -dynamiclib 
-INCLUDE_DIRS = -I$(JAVA_HOME)/include/darwin -I$(JAVA_HOME)/include
-INCLUDE_FRAMEWORKS = -F/Library/Frameworks
+LDFLAGS = -framework 3DconnexionClient -dynamiclib -lc++
+INCLUDE_DIRS = -I $(JAVA_HOME)/include/darwin -I $(JAVA_HOME)/include -I Frameworks
 # #############################################################################################
-JNI_DIR      := $(subst .,/,$(PACKAGE))
-JAVA_SRC	:= $(wildcard $(JNI_DIR)/*.java)
+JNI_DIR     := $(subst .,/,$(PACKAGE))
+JAVA_SRC    := $(wildcard ../src/$(JNI_DIR)/*.java)
 JAVA_OBJS   := $(JAVA_SRC:.java=.class)
 JNI_HEADER	:= $(subst .,_,$(PACKAGE))_$(JNI_NAME).h
 # #############################################################################################
-NATIVE_LIB	:= lib$(JNI_NAME).jnilib
+NATIVE_LIB	:= lib$(JNI_NAME).dylib
 CLASS_PATH = ../bin
 # Define a virtual path for .class in the bin directory
 vpath %.class $(CLASS_PATH)
+
 # #############################################################################################
 # build all
 # #############################################################################################
-all: testjava clean $(NATIVE_LIB) $(JNI_NAME).jar
+all: testjava $(NATIVE_LIB) $(JNI_NAME).jar
 
 # #############################################################################################
 # test if java is setup?
@@ -40,8 +40,8 @@ testjava:
 # #############################################################################################
 # compile java into class files
 # #############################################################################################
-%.class:	%.java
-	$(JAVA_HOME)/bin/javac -C ../bin $<
+$(JNI_DIR)/$(JNI_NAME).class:	$(JAVA_SRC)
+	$(JAVA_HOME)/bin/javac  -cp ../src -d ../bin $(JAVA_SRC)
 	
 # #############################################################################################
 # generate the C/C++ header file from java code
@@ -52,17 +52,15 @@ $(JNI_HEADER):	$(JNI_DIR)/$(JNI_NAME).class
 # #############################################################################################
 # build the jar file
 # #############################################################################################
-$(JNI_NAME).jar:	$(JAVA_OBJS)
-	$(JAVA_HOME)/bin/jar cvfe  $@  $(PACKAGE).$(JNI_NAME)Demo -C ../bin/ . $^
+$(JNI_NAME).jar:	$(JNI_HEADER)
+	$(JAVA_HOME)/bin/jar cvfe  $@  $(PACKAGE).$(JNI_NAME)Demo -C ../bin/ . 
 		
 # #############################################################################################
 # build the dynamic native library
 # #############################################################################################
 $(NATIVE_LIB):	$(JNI_HEADER) $(JNI_NAME).cpp
-	g++ -v $(INCLUDE_DIRS) \
-	    $(LDFLAGS) \
-	    -o $@ $(JNI_NAME).cpp
-	
+	gcc -v $(CFLAGS) $(JNI_NAME).cpp $(INCLUDE_DIRS) $(LDFLAGS) -o $@
+
 # #############################################################################################
 # build java doc
 # #############################################################################################
@@ -73,8 +71,8 @@ documentation:
 # remove all generated files
 # #############################################################################################
 clean:
-	rm -f $(JAVA_OBJS) \
-	      include/$(JNI_HEADER) \
-	      $(NATIVE_LIB) \
-	      $(JNI_NAME).jar
+	rm -f ../bin/$(JNI_DIR)/*.class \
+	    include/$(JNI_HEADER) \
+	    $(NATIVE_LIB) \
+	    $(JNI_NAME).jar
 	rm -rf ../documentation
