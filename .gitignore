@@ -12,3 +12,5 @@ workspace
 *.jar
 Debug
 include
+documentation
+
