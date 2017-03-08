@@ -8,8 +8,9 @@ target
 workspace
 *.log
 *.class
-*.jnilib
 *.jar
+*.jnilib
+*.dylib
 Debug
 include
 documentation
