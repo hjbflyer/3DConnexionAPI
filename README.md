@@ -1,5 +1,6 @@
 # 3DConnexionAPI
 Java API implementation for the Connexion 3D mouse.
+![spacemouse image ](https://cloud.githubusercontent.com/assets/18046150/23752207/a5ca2396-04d4-11e7-9456-dff0acd32906.png)
 
 ## Prerequisites
 * [Java 8 JDK](http://www.java.com) (But code can be easily changed to an earlier version)
