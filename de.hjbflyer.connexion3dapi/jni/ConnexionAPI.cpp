@@ -56,7 +56,10 @@ JNIEXPORT jint JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_setConnexion
 		jobject callingObject, jboolean useSeparateThread) {
 
 	// get reference to virtual machine
-	int status = env->GetJavaVM(&g_virtualMachine);
+	int error = env->GetJavaVM(&g_virtualMachine);
+	if (error != 0) {
+		return error;
+	}
 	// reference to calling class
 	g_callingObject = env->NewGlobalRef(callingObject);
 	// get class of the callingObject
@@ -243,7 +246,7 @@ static void InternalMessageHandler(unsigned int productID, unsigned int messageT
 	std::string s;
 
 	if (NULL == g_virtualMachine) {
-		std::cerr << "g vm = null" << std::endl;
+		std::cerr << "??? No virtual machine." << std::endl;
 		return;
 	}
 	env = getEnvAndcheckVersionAndAttachTread();
@@ -331,13 +334,13 @@ JNIEnv * getEnvAndcheckVersionAndAttachTread() {
 	int getEnvStat = g_virtualMachine->GetEnv((void **) &env, JNI_VERSION_1_8);
 	if (getEnvStat == JNI_EDETACHED) {
 		if (g_virtualMachine->AttachCurrentThread((void **) &env, NULL) != 0) {
-			std::cerr << "??? Failed to attach current thread" << std::endl;
+			std::cerr << "??? Failed to attach current thread." << std::endl;
 			return NULL;
 		}
 	} else if (getEnvStat == JNI_OK) {
 		//
 	} else if (getEnvStat == JNI_EVERSION) {
-		std::cerr << "JNI version not supported" << std::endl;
+		std::cerr << "??? JNI version not supported." << std::endl;
 		return NULL;
 	}
 	return env;
