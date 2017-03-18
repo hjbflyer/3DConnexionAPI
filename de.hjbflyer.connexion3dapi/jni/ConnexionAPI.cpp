@@ -18,12 +18,10 @@
 JavaVM *g_virtualMachine;					// Java VM
 jobject g_callingObject;					// instance of the ConnexionAPI
 jmethodID g_midMessageAxisHandler;			// method ID for the message axis handler
-jmethodID g_midForMessageButtonHandler;		// method ID for the message button handler
-jmethodID g_midForAddedHandler;				// method ID for the device added handler
-jmethodID g_midForRemovedHandler;			// method ID for the device removed handler
+jmethodID g_midForMessageButtonHandler;     // method ID for the message button handler
+jmethodID g_midForDeviceAddedHandler;       // method ID for the device added handler
+jmethodID g_midForDeviceRemovedHandler;     // method ID for the device removed handler
 jmethodID g_midForPrefsHandler;				// method ID for the device removed handler
-jmethodID g_midForDeviceAddedHandler;
-jmethodID g_midForDeviceRemovedHandler;
 int g_clientID;								// identifies the client
 
 // Forward declarations of message handlers
