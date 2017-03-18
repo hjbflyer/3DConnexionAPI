@@ -16,7 +16,7 @@
 // global references - we use the prefix 'g_' for global references
 // ===========================================================================================================
 JavaVM *g_virtualMachine;					// Java VM
-jobject g_callingObj;						// instance of the ConnexionAPI
+jobject g_callingObject;					// instance of the ConnexionAPI
 jmethodID g_midMessageAxisHandler;			// method ID for the message axis handler
 jmethodID g_midForMessageButtonHandler;		// method ID for the message button handler
 jmethodID g_midForAddedHandler;				// method ID for the device added handler
@@ -53,14 +53,14 @@ JNIEnv * getEnvAndcheckVersionAndAttachTread();
  * ***********************************************************************************************************
  */
 JNIEXPORT jint JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_setConnexionHandlers(JNIEnv *env,
-		jobject callingObj, jboolean useSeparateThread) {
+		jobject callingObject, jboolean useSeparateThread) {
 
 	// get reference to virtual machine
 	int status = env->GetJavaVM(&g_virtualMachine);
 	// reference to calling class
-	g_callingObj = env->NewGlobalRef(callingObj);
-	// get class of the callingObj
-	jclass callingClass = env->GetObjectClass(callingObj);
+	g_callingObject = env->NewGlobalRef(callingObject);
+	// get class of the callingObject
+	jclass callingClass = env->GetObjectClass(callingObject);
 	// get the method id's of the jave code
 	g_midMessageAxisHandler = env->GetMethodID(callingClass, "messageHandlerAxisCallback", "(II[I)V");
 	g_midForMessageButtonHandler = env->GetMethodID(callingClass, "messageHandlerButtonCallback", "(IIJ)V");
@@ -86,7 +86,7 @@ JNIEXPORT jint JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_setConnexion
  * ***********************************************************************************************************
  */
 JNIEXPORT void JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_registerConnexionClient(JNIEnv *env,
-		jobject callingObj, jint bundleSig, jstring execName, jint takeOver, jlong mask) {
+		jobject callingObject, jint bundleSig, jstring execName, jint takeOver, jlong mask) {
 
 	// get exex name and convert it to a pascal string
 	const char *execNameCStr = env->GetStringUTFChars(execName, NULL);
@@ -122,7 +122,7 @@ JNIEXPORT void JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_cleanUpConne
  * ***********************************************************************************************************
  */
 JNIEXPORT void JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_unregisterConnexionClient(JNIEnv *env,
-		jobject callingObj) {
+		jobject callingObject) {
 	UnregisterConnexionClient(g_clientID);
 	g_clientID = 0;
 }
@@ -137,11 +137,11 @@ JNIEXPORT void JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_unregisterCo
 JNIEXPORT jint JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_connexionClientControl(JNIEnv *env,
 		jobject callingObject, jint message, jint param, jobject ret) {
 	int32_t returnValue;
-	int err = ConnexionClientControl(g_clientID, kConnexionCtlGetDeviceID, g_clientID, &returnValue);
+	int error= ConnexionClientControl(g_clientID, kConnexionCtlGetDeviceID, g_clientID, &returnValue);
 	jclass  clazz = env->FindClass("java/lang/Integer");
 	jmethodID mid = env->GetMethodID(clazz, "<init>", "(I)V");
 	env->CallVoidMethod(ret, mid, returnValue);
-	return err;
+	return error;
 }
 
 /*
@@ -155,7 +155,7 @@ JNIEXPORT jint JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_connexionCli
  * ***********************************************************************************************************
  */
 JNIEXPORT void JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_setConnexionClientMask(JNIEnv *env,
-		jobject callingObj, jlong mask) {
+		jobject callingObject, jlong mask) {
 	SetConnexionClientMask(g_clientID, mask);
 }
 
@@ -169,7 +169,7 @@ JNIEXPORT void JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_setConnexion
  * ***********************************************************************************************************
  */
 JNIEXPORT void JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_setConnexionClientButtonMask(JNIEnv *env,
-		jobject callingObj, jlong buttonMask) {
+		jobject callingObject, jlong buttonMask) {
 	SetConnexionClientButtonMask(g_clientID, buttonMask);
 }
 
@@ -185,7 +185,7 @@ JNIEXPORT void JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_setConnexion
  * ***********************************************************************************************************
  */
 JNIEXPORT jint JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_connexionGetCurrentDevicePrefs(JNIEnv *env,
-		jobject callingObj, jobject prefsObj) {
+		jobject callingObject, jobject prefsObj) {
 	int32_t deviceID;
 	ConnexionClientControl(g_clientID, kConnexionCtlGetDeviceID, 0, &deviceID);
 	ConnexionDevicePrefs prefs;
@@ -265,7 +265,7 @@ static void InternalMessageHandler(unsigned int productID, unsigned int messageT
 					break;
 
 				case kConnexionCmdHandleButtons:
-					env->CallVoidMethod(g_callingObj, g_midForMessageButtonHandler, productID, messageType,
+					env->CallVoidMethod(g_callingObject, g_midForMessageButtonHandler, productID, messageType,
 							state->buttons);
 					break;
 				}
@@ -281,7 +281,7 @@ static void InternalMessageHandler(unsigned int productID, unsigned int messageT
 			error = ConnexionGetCurrentDevicePrefs(deviceID, &prefs);
 			if (error == 0) {
 				fillPrefs(prefsClass, prefsObj, env, &prefs);
-				env->CallVoidMethod(g_callingObj, g_midForPrefsHandler, productID, messageType, prefsObj);
+				env->CallVoidMethod(g_callingObject, g_midForPrefsHandler, productID, messageType, prefsObj);
 			}
 			break;
 
@@ -302,7 +302,7 @@ static void InternalAddedHandler(unsigned int productID) {
 	JNIEnv *env;
 	env = getEnvAndcheckVersionAndAttachTread();
 	if (env != NULL) {
-		env->CallVoidMethod(g_callingObj, g_midForDeviceAddedHandler, productID);
+		env->CallVoidMethod(g_callingObject, g_midForDeviceAddedHandler, productID);
 	}
 
 }
@@ -316,7 +316,7 @@ static void InternalRemovedHandler(unsigned int productID) {
 	JNIEnv *env;
 	env = getEnvAndcheckVersionAndAttachTread();
 	if (env != NULL) {
-		env->CallVoidMethod(g_callingObj, g_midForDeviceRemovedHandler, productID);
+		env->CallVoidMethod(g_callingObject, g_midForDeviceRemovedHandler, productID);
 	}
 }
 
@@ -356,7 +356,7 @@ void fillIntArray(unsigned int productID, unsigned int messageType, JNIEnv* env,
 		data[i] = values[i];
 	}
 	env->SetIntArrayRegion(intarray, 0, NO_OF_AXIS, data);
-	env->CallVoidMethod(g_callingObj, mid, productID, messageType, intarray);
+	env->CallVoidMethod(g_callingObject, mid, productID, messageType, intarray);
 }
 
 /*
