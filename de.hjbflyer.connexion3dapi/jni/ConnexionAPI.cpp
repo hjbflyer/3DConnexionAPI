@@ -23,6 +23,8 @@ jmethodID g_midForDeviceAddedHandler;       // method ID for the device added ha
 jmethodID g_midForDeviceRemovedHandler;     // method ID for the device removed handler
 jmethodID g_midForPrefsHandler;				// method ID for the device removed handler
 int g_clientID;								// identifies the client
+bool g_useSeparateThread;
+int32_t g_deviceID;
 
 // Forward declarations of message handlers
 // ===========================================================================================================
@@ -58,17 +60,20 @@ JNIEXPORT jint JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_setConnexion
 	if (error != 0) {
 		return error;
 	}
+	g_useSeparateThread = useSeparateThread;
 	// reference to calling class
 	g_callingObject = env->NewGlobalRef(callingObject);
 	// get class of the callingObject
-	jclass callingClass = env->GetObjectClass(callingObject);
-	// get the method id's of the jave code
+	jclass callingClass = env->GetObjectClass(g_callingObject);
+	// get the method id's of the java code
 	g_midMessageAxisHandler = env->GetMethodID(callingClass, "messageHandlerAxisCallback", "(II[I)V");
 	g_midForMessageButtonHandler = env->GetMethodID(callingClass, "messageHandlerButtonCallback", "(IIJ)V");
 	g_midForPrefsHandler = env->GetMethodID(callingClass, "messageHandlerPrefsCallback",
 			"(IILde/hjbflyer/connexion3dapi/ConnexionDevicePrefs;)V");
 	g_midForDeviceAddedHandler = env->GetMethodID(callingClass, "deviceAddedHandler", "(I)V");
 	g_midForDeviceRemovedHandler = env->GetMethodID(callingClass, "deviceRemovedHandler", "(I)V");
+
+	error = ConnexionControl(kConnexionCtlGetDeviceID, 0, &g_deviceID);
 
 	// now set the handlers and return the error code
 	return SetConnexionHandlers(InternalMessageHandler, InternalAddedHandler, InternalRemovedHandler, useSeparateThread);
@@ -89,11 +94,16 @@ JNIEXPORT jint JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_setConnexion
 JNIEXPORT void JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_registerConnexionClient(JNIEnv *env,
 		jobject callingObject, jint bundleSig, jstring execName, jint takeOver, jlong mask) {
 
-	// get exex name and convert it to a pascal string
-	const char *execNameCStr = env->GetStringUTFChars(execName, NULL);
-	char execNamePStr[65];
-	cstr2pstr(execNameCStr, execNamePStr);
-	g_clientID = RegisterConnexionClient(bundleSig, (uint8_t *) execNamePStr, takeOver, mask);
+	if (execName != NULL) {
+		// get exec name and convert it to a Pascal string
+		const char *execNameCStr = env->GetStringUTFChars(execName, NULL);
+		char execNamePStr[65];
+		cstr2pstr(execNameCStr, execNamePStr);
+		env->ReleaseStringUTFChars(execName, execNameCStr);
+		g_clientID = RegisterConnexionClient(bundleSig, (uint8_t *) execNamePStr, takeOver, mask);
+	} else {
+		g_clientID = RegisterConnexionClient(bundleSig, (uint8_t *) NULL, takeOver, mask);
+	}
 }
 
 /*
@@ -125,6 +135,7 @@ JNIEXPORT void JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_cleanUpConne
 JNIEXPORT void JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_unregisterConnexionClient(JNIEnv *env,
 		jobject callingObject) {
 	UnregisterConnexionClient(g_clientID);
+	env->DeleteGlobalRef(g_callingObject);
 	g_clientID = 0;
 }
 
@@ -187,11 +198,18 @@ JNIEXPORT void JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_setConnexion
  */
 JNIEXPORT jint JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_connexionGetCurrentDevicePrefs(JNIEnv *env,
 		jobject callingObject, jobject prefsObj) {
-	int32_t deviceID;
-	ConnexionClientControl(g_clientID, kConnexionCtlGetDeviceID, 0, &deviceID);
+	JNIEnv *env2 = getEnvAndcheckVersionAndAttachTread();
+
+	if (env2 != env) {
+		std::cerr << "problem with env" << std::endl;
+	}
+
+//	int error = ConnexionControl(kConnexionCtlGetDeviceID, 0, &deviceID);
+//	ConnexionControl(kConnexionCtlGetDeviceID, 0, &deviceID);
 	ConnexionDevicePrefs prefs;
 	ConnexionDevicePrefs *pprefs = &prefs;
-	int error = ConnexionGetCurrentDevicePrefs(deviceID, &prefs);
+	int error = ConnexionGetCurrentDevicePrefs(g_deviceID, &prefs);
+	ConnexionGetCurrentDevicePrefs(g_deviceID, &prefs);
 	jclass prefsClass = env->GetObjectClass(prefsObj);
 	fillPrefs(prefsClass, prefsObj, env, pprefs);
 	return error;
@@ -219,7 +237,6 @@ JNIEXPORT jint JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_connexionSet
  * ***********************************************************************************************************
  *
  */
-
 /*
  * ***********************************************************************************************************
  * InternalMessageHandler
@@ -229,10 +246,8 @@ static void InternalMessageHandler(unsigned int productID, unsigned int messageT
 
 	ConnexionDeviceState *state;
 	ConnexionDevicePrefs prefs;
-	ConnexionDevicePrefs *pprefs = &prefs;
 	jclass prefsClass;
-	jobject prefsObj;
-	jobject pprefsObj;
+	jobject prefsObject;
 	JNIEnv *env;
 	uint32_t signature;
 	int32_t deviceID;
@@ -253,24 +268,23 @@ static void InternalMessageHandler(unsigned int productID, unsigned int messageT
 		// NOTE for ConnexionMessageHandlerProc:
 		// when messageType == kConnexionMsgDeviceState, messageArgument points to ConnexionDeviceState with size kConnexionDeviceStateSize
 		// when messageType == kConnexionMsgPrefsChanged, messageArgument points to the target application signature with size sizeof(uint32_t)
-		prefsClass = env->FindClass("de/hjbflyer/connexion3dapi/ConnexionDevicePrefs");
-		prefsObj = env->NewObject(prefsClass, env->GetMethodID(prefsClass, "<init>", "()V"));
+
 		switch (messageType) {
 		case kConnexionMsgDeviceState:
 			state = (ConnexionDeviceState*) messageArgument;
 			if (state->client == g_clientID) {
-
 				switch (state->command) {
 				case kConnexionCmdHandleAxis:
 					fillIntArray(productID, messageType, env, g_midMessageAxisHandler, state->axis);
 					break;
 
 				case kConnexionCmdHandleButtons:
+				case kConnexionCmdAppSpecific:
+				case kConnexionCmdHandleRawData:
 					env->CallVoidMethod(g_callingObject, g_midForMessageButtonHandler, productID, messageType,
 							state->buttons);
 					break;
 				}
-
 			}
 			if (env->ExceptionCheck()) {
 				env->ExceptionDescribe();
@@ -278,12 +292,16 @@ static void InternalMessageHandler(unsigned int productID, unsigned int messageT
 			break;
 
 		case kConnexionMsgPrefsChanged:
-			ConnexionClientControl(g_clientID, kConnexionCtlGetDeviceID, 0, &deviceID);
-			error = ConnexionGetCurrentDevicePrefs(deviceID, &prefs);
+			signature = (uint32_t)(long)messageArgument;
+//			ConnexionControl(kConnexionCtlGetDeviceID, 0, &deviceID);
+			error = ConnexionGetCurrentDevicePrefs(g_deviceID, &prefs);
 			if (error == 0) {
-				fillPrefs(prefsClass, prefsObj, env, &prefs);
-				env->CallVoidMethod(g_callingObject, g_midForPrefsHandler, productID, messageType, prefsObj);
+				prefsClass = env->FindClass("de/hjbflyer/connexion3dapi/ConnexionDevicePrefs");
+				prefsObject = env->NewObject(prefsClass, env->GetMethodID(prefsClass, "<init>", "()V"));
+				fillPrefs(prefsClass, prefsObject, env, &prefs);
+				env->CallVoidMethod(g_callingObject, g_midForPrefsHandler, productID, messageType, prefsObject);
 			}
+			std::cout  << std::endl;
 			break;
 
 		default:
@@ -291,7 +309,9 @@ static void InternalMessageHandler(unsigned int productID, unsigned int messageT
 			break;
 		}
 	}
-	g_virtualMachine->DetachCurrentThread();
+	if (g_useSeparateThread) {
+			g_virtualMachine->DetachCurrentThread();
+	}
 }
 
 /*

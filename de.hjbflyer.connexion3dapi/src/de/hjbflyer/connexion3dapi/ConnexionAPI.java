@@ -53,9 +53,11 @@ public class ConnexionAPI {
     public static final int CTRL_ACTIVATE_CLIENT   = 0x33646163;
     public static final int CTRL_DEACTIVATE_CLIENT = 0x33646463;
     
-    private static final int CLIENT_WILDCARD = 0x2A2A2A2A;
-    private static final int CLIENT_MANUAL = 0x2B2B2B2B;
-    private static final boolean USE_SEPARATE_THREAD = true;
+    /** CLIENT_WILDCARD use this as a unspecified signature  */
+    public static final int CLIENT_WILDCARD = 0x2A2A2A2A;
+    /** CLIENT_MANUAL another constant */
+    public static final int CLIENT_MANUAL = 0x2B2B2B2B;
+    public static final boolean USE_SEPARATE_THREAD = true;
     private static final int CLIENT_MODE_TAKE_OVER = 1;
     private static final int MASK_ALL = 0x3FFF;
     // private static int s = '3' << 24 + 'd' << 16 + 's' << 8 + 'l';
@@ -74,12 +76,14 @@ public class ConnexionAPI {
 
     /**
      * The constructor sets up the message handling and registers the application with the device handler. 
+     * The signature is used to identify the app in the drivers mapping file. The signature and execName are used
+     * to look up parameters in the drivers mapping file. If a signature is used, the name can be <em>null</em>.
      * @param execName name of the application
      */
-    public ConnexionAPI(String execName) {
+    public ConnexionAPI(long signature, String execName, boolean useSeparateThread) {
         try {
-            setConnexionHandlers();
-            registerConnexion(execName);
+            initConnexionHandlers(useSeparateThread);
+            registerConnexion((int)signature, execName);
             setConnexionClientMask(MASK_ALL);
             
         } catch (ConnexionAPIException e) {
@@ -256,9 +260,9 @@ public class ConnexionAPI {
      * 
      * @throws ConnexionAPIException if an error occurs
      */
-    private void setConnexionHandlers() throws ConnexionAPIException {
+    private void initConnexionHandlers(boolean useSeparateThread) throws ConnexionAPIException {
 
-        int error = setConnexionHandlers(USE_SEPARATE_THREAD);
+        int error = setConnexionHandlers(useSeparateThread);
         if (error != 0) {
             throw new ConnexionAPIException("setConnexionHandlers failed with error: " + error); //$NON-NLS-1$
         }
@@ -268,10 +272,11 @@ public class ConnexionAPI {
     /**
      * Register the application with the device.
      * 
+     * @param signature id of the app
      * @param string name of the application
      */
-    private void registerConnexion(String string) {
-        registerConnexionClient(CLIENT_WILDCARD, string, CLIENT_MODE_TAKE_OVER, MASK_ALL); // $NON-NLS-1$
+    private void registerConnexion(int signature, String string) {
+        registerConnexionClient(signature, string, CLIENT_MODE_TAKE_OVER, MASK_ALL); // $NON-NLS-1$
     }
 
     /**
@@ -349,6 +354,7 @@ public class ConnexionAPI {
      * @param prefs ConnexionDevicePrefs
      */
     private void messageHandlerPrefsCallback(int id, int type, ConnexionDevicePrefs prefs) {
+    	
         m_prefsChangedListeners.stream().forEach(l -> l.prefsChanged(prefs));
     }
 
@@ -366,5 +372,18 @@ public class ConnexionAPI {
      */
     private void deviceRemovedHandler(int productID) {
         m_deviceRemovedListeners.stream().forEach(l -> l.deviceRemoved(productID));
+    }
+    
+    /**
+     * pack4chars into an int for creating a signature
+     * 
+     * @param c1 char
+     * @param c2 char
+     * @param c3 char
+     * @param c4 char
+     * @return the packed characters
+     */
+    public static long pack4chars(char c1, char c2, char c3, char c4) {
+    	return ((c1 << 24)  | (c2 << 16) | (c3 << 8) | (c4)) & 0xffffffffL; 
     }
 }

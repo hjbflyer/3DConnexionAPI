@@ -26,8 +26,9 @@ public class ConnexionAPIDemo extends Application
     IConnexionDeviceAddedListener, IConnexionDeviceRemovedListener, IConnexionPrefsChangedListener {
 
     /** APP_NAME name of the application */
-    private static final String APP_NAME = "3DConnexionAPIDemo"; //$NON-NLS-1$
+    private static final String APP_NAME = "JavaDemo"; //$NON-NLS-1$
 
+    private ConnexionAPI m_api;
     /**
      * Run the test program as simple Java FX application.
      * 
@@ -45,12 +46,14 @@ public class ConnexionAPIDemo extends Application
     public void start(Stage primaryStage) throws Exception {
         ConnexionDevicePrefs prefs = new ConnexionDevicePrefs();
         
-        ConnexionAPI api = new ConnexionAPI(APP_NAME);
-        api.addAxisChangedListener(this);
-        api.addButtonChangedListener(this);
-        api.addDeviceAddedListeners(this);
-        api.addDeviceRemovedListeners(this);
-        api.addPrefsChangedListeners(this);
+//        long signature = ConnexionAPI.pack4chars('H', 'J', 'B', '1');
+//        m_api = new ConnexionAPI(signature, null);
+        m_api = new ConnexionAPI(ConnexionAPI.CLIENT_MANUAL, "java", !ConnexionAPI.USE_SEPARATE_THREAD); //$NON-NLS-1$
+        m_api.addAxisChangedListener(this);
+        m_api.addButtonChangedListener(this);
+        m_api.addDeviceAddedListeners(this);
+        m_api.addDeviceRemovedListeners(this);
+        m_api.addPrefsChangedListeners(this);
 
         primaryStage.setTitle(APP_NAME);
         Button btn = new Button();
@@ -60,10 +63,10 @@ public class ConnexionAPIDemo extends Application
 
             @Override
             public void handle(ActionEvent event) {
-                api.connexionGetCurrentDevicePrefs(prefs);
-                System.out.println("Prefs: " + prefs.toString());
+                m_api.connexionGetCurrentDevicePrefs(prefs);
+                System.out.println("Prefs: " + prefs.toString()); //$NON-NLS-1$
                 Integer i = new Integer(0);
-                int err = api.connexionClientControl(ConnexionAPI.CTRL_GET_CLIENT_ID, 0, i);
+                int err = m_api.connexionClientControl(ConnexionAPI.CTRL_GET_CLIENT_ID, 0, i);
                 System.out.println("control returned with error: " + err + " and clientID " + i);  //$NON-NLS-1$//$NON-NLS-2$
             }
         });
@@ -73,7 +76,7 @@ public class ConnexionAPIDemo extends Application
 
             @Override
             public void handle(ActionEvent event) {
-                api.closeAndCleanUp();
+                m_api.closeAndCleanUp();
                 System.exit(0);
             }
         });

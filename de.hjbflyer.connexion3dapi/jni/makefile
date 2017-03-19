@@ -23,6 +23,13 @@ CLASS_PATH = ../bin
 # Define a virtual path for .class in the bin directory
 vpath %.class $(CLASS_PATH)
 
+OS := $(shell uname)
+ifeq ($(OS),Darwin)
+DEST_DIR:=../os/macosx/x86_64/
+endif
+
+.PHONY: clean testjava all
+
 # #############################################################################################
 # build all
 # #############################################################################################
@@ -60,6 +67,7 @@ $(JNI_NAME).jar:	$(JNI_HEADER)
 # #############################################################################################
 $(NATIVE_LIB):	$(JNI_HEADER) $(JNI_NAME).cpp
 	gcc -v $(CFLAGS) $(JNI_NAME).cpp $(INCLUDE_DIRS) $(LDFLAGS) -o $@
+	cp $(NATIVE_LIB) $(DEST_DIR)
 
 # #############################################################################################
 # build java doc
