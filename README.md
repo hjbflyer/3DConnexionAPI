@@ -59,7 +59,8 @@ make documentation
 The initial version of this project does support OS X only. To build for other operating systems, the <b>makefile</b>
 has to be adapted.
 
-To use the API you have to include the dynamic library <b>libConnexionAPI.jnilib</b> in your library load path.
+To use the API you have to include the dynamic library <b>libConnexionAPI.dylib</b> in your library load path.
+The plugin version has the library in its bundle included.
 
 ## License
 
