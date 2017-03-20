@@ -225,8 +225,22 @@ JNIEXPORT jint JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_connexionGet
 JNIEXPORT jint JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_connexionSetButtonLabels(
 		JNIEnv *env, jobject callingObject, jobjectArray labels, jint size) {
 
-	//return ConnexionSetButtonLabels(labels, size);
-	return 0;
+	const char *cLabels[32];
+	jstring strings[32];
+	for (int i=0; i< size; i++) {
+		strings[i] = (jstring) (env->GetObjectArrayElement(labels, i));
+		if (strings[i] != NULL) {
+			cLabels[i] = env->GetStringUTFChars(strings[i], NULL);
+		}
+	}
+		std::cout << "set" << std::endl;
+	int err = ConnexionSetButtonLabels((unsigned char*)cLabels, size);
+	for (int i=0; i< size; i++) {
+		if (strings[i] != NULL) {
+		env->ReleaseStringChars(strings[i], (unsigned short int *)cLabels[i]);
+		}
+	}
+	return err;
 }
 
 /*
