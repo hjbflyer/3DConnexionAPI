@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Connexion3dapi
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-NativeCode: os/macosx/x86_64/libConnexionAPI.dylib; osname=macosx; processor=x86_64,
+ os/win32/x86_64/libConnexionAPI.dll; osname=win32; processor=x86_64,
+ os/linux/x86_64/libConnexion.dll; osname=linux; processor=x86_64
+Bundle-SymbolicName: de.hjbflyer.connexion3dapi
+Bundle-Version: 1.0.0.qualifier
+Export-Package: de.hjbflyer.connexion3dapi
+Main-Class: de.hjbflyer.connexion3dapi.ConnexionAPIDemo
