@@ -9,3 +9,4 @@ Bundle-SymbolicName: de.hjbflyer.connexion3dapi
 Bundle-Version: 1.0.0.qualifier
 Export-Package: de.hjbflyer.connexion3dapi
 Main-Class: de.hjbflyer.connexion3dapi.ConnexionAPIDemo
+Require-Bundle: org.eclipse.osgi

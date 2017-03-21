@@ -28,6 +28,7 @@ public class ConnexionAPIDemo extends Application
     /** APP_NAME name of the application */
     private static final String APP_NAME = "JavaDemo"; //$NON-NLS-1$
 
+    /** m_api ConnexionAPI */
     private ConnexionAPI m_api;
     /**
      * Run the test program as simple Java FX application.

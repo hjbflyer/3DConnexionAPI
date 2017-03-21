@@ -78,7 +78,9 @@ public class ConnexionAPI {
      * The constructor sets up the message handling and registers the application with the device handler. 
      * The signature is used to identify the app in the drivers mapping file. The signature and execName are used
      * to look up parameters in the drivers mapping file. If a signature is used, the name can be <em>null</em>.
+     * @param signature integer to identify the application in the settings 
      * @param execName name of the application
+     * @param useSeparateThread true if the events are handled in a separate thread
      */
     public ConnexionAPI(long signature, String execName, boolean useSeparateThread) {
         try {
@@ -258,6 +260,7 @@ public class ConnexionAPI {
     /**
      * setConnexionHandlers calls the first native method and sets the different handlers.
      * 
+     * @param useSeparateThread boolean
      * @throws ConnexionAPIException if an error occurs
      */
     private void initConnexionHandlers(boolean useSeparateThread) throws ConnexionAPIException {
@@ -354,7 +357,6 @@ public class ConnexionAPI {
      * @param prefs ConnexionDevicePrefs
      */
     private void messageHandlerPrefsCallback(int id, int type, ConnexionDevicePrefs prefs) {
-    	
         m_prefsChangedListeners.stream().forEach(l -> l.prefsChanged(prefs));
     }
 
@@ -384,6 +386,6 @@ public class ConnexionAPI {
      * @return the packed characters
      */
     public static long pack4chars(char c1, char c2, char c3, char c4) {
-    	return ((c1 << 24)  | (c2 << 16) | (c3 << 8) | (c4)) & 0xffffffffL; 
+        return ((c1 << 24)  | (c2 << 16) | (c3 << 8) | (c4)) & 0xffffffffL; 
     }
 }
