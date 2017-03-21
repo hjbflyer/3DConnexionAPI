@@ -209,7 +209,6 @@ JNIEXPORT jint JNICALL Java_de_hjbflyer_connexion3dapi_ConnexionAPI_connexionGet
 	ConnexionDevicePrefs prefs;
 	ConnexionDevicePrefs *pprefs = &prefs;
 	int error = ConnexionGetCurrentDevicePrefs(g_deviceID, &prefs);
-	ConnexionGetCurrentDevicePrefs(g_deviceID, &prefs);
 	jclass prefsClass = env->GetObjectClass(prefsObj);
 	fillPrefs(prefsClass, prefsObj, env, pprefs);
 	return error;
